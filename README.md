@@ -1,4 +1,24 @@
-# Getting Started with Create React App
+# React's Github Issue Viewer
+
+Technologies used:
+
+- React.js
+- Webpack through CRA: https://create-react-app.dev/
+- Typescript
+- apollo client: https://www.apollographql.com/
+- graphQL Code Generator: https://the-guild.dev/graphql/codegen
+
+## Explor Githubs GraphQL API
+
+https://docs.github.com/en/graphql/overview/explorer
+
+## Download Github GraphQL Schema
+
+https://docs.github.com/public/schema.docs.graphql
+
+
+
+# Create React App Documentation (TODO Removve)
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
