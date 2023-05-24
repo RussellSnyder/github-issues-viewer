@@ -1,92 +1,222 @@
 import { useQuery } from "@apollo/client";
-import { useCallback, useState } from "react";
+import { Avatar, Input, List, Skeleton } from "antd";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { graphql } from "../gql/gql";
-import { IssueEdge } from "../gql/graphql";
+import { Issue } from "../gql/graphql";
+import { useViewDataState } from "../hooks/useViewDataState";
+import { ViewDataState } from "../types";
+import { IssueStatus, StatusChooser } from "./StatusChooser";
 
-const allReactIssuesWithVariablesQueryDocument = graphql(/* GraphQL */ `
-  query allReactIssuesWithVariablesQuery($first: Int!) {
-    repository(name: "react", owner: "facebook") {
-      issues(first: $first) {
-        totalCount
-        edges {
-          cursor
-          node {
-            id
-            title
-            state
-            updatedAt
-            bodyHTML
-            closed
-            author {
-              avatarUrl(size: 50)
-              login
-            }
+const { Search } = Input;
+
+// https://github.com/orgs/community/discussions/24428#discussioncomment-3244094
+const searchQueryDocument = graphql(/* GraphQL */ `
+  query searchQuery($query: String!) {
+    search(query: $query, type: ISSUE, first: 100) {
+      nodes {
+        ... on Issue {
+          id
+          title
+          state
+          updatedAt
+          body
+          closed
+          author {
+            avatarUrl(size: 50)
+            login
           }
-        }
-        pageInfo {
-          endCursor
-          hasNextPage
         }
       }
     }
   }
 `);
 
-interface IssuePreviewProps {
-  title: string;
+interface IssuePreviewProps extends Issue {
+  activeSearchTerm: string;
 }
 
-const IssuePreview = ({ title }: IssuePreviewProps) => {
-  return <h3>{title}</h3>;
-};
+// The number of characters to add to each side of where the search term was found in the body
+const BODY_SNIPPET_PADDING = 30;
+const createBodySnippetWithHighlight = (
+  activeSearchTerm: string,
+  body?: string
+): string | undefined => {
+  if (!body) return;
+  // get the text from around the search term in the body
+  const indexOfActiveSearchTermInBody = body.indexOf(activeSearchTerm);
+  if (indexOfActiveSearchTermInBody === -1) return;
 
-export const IssueViewer = () => {
-  const [first, setFirst] = useState(100);
+  const highlight = `<strong>${activeSearchTerm}</strong>`;
 
-  const { data, loading, error, fetchMore } = useQuery(
-    allReactIssuesWithVariablesQueryDocument,
-    {
-      variables: { first },
-    }
+  const startPoint = Math.max(
+    0,
+    indexOfActiveSearchTermInBody - BODY_SNIPPET_PADDING
+  );
+  const endPoint = Math.min(
+    startPoint + activeSearchTerm.length + BODY_SNIPPET_PADDING * 2,
+    body.length
   );
 
-  const onPageChange = useCallback((page: number) => {}, []);
+  const bodyExceptWithActiveSearchTerm = body.substring(startPoint, endPoint);
+  return bodyExceptWithActiveSearchTerm?.replaceAll(
+    activeSearchTerm,
+    highlight
+  );
+};
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  if (error) {
-    return (
-      <div>
-        Errors: {error.name} {error.message}
-      </div>
-    );
-  }
+const createTitleWithHighlights = (
+  activeSearchTerm: string,
+  title?: string
+): string | undefined => {
+  if (!title || title.indexOf(activeSearchTerm) === -1) return;
 
-  if (!data) {
-    return <div>no data</div>;
-  }
-  if (!data.repository) {
-    return <div>no repository</div>;
-  }
-  if (!data.repository.issues.edges) {
-    return <div>no issues</div>;
-  }
+  const highlight = `[${activeSearchTerm}]`;
 
-  // At this point, we know there is data
-  const issues = data.repository.issues.edges as IssueEdge[];
+  return title?.replaceAll(activeSearchTerm, highlight);
+};
+
+const RenderItem = ({
+  title,
+  body,
+  author,
+  activeSearchTerm,
+  id,
+  closed,
+}: IssuePreviewProps) => {
+  const titleWithHighlight = createTitleWithHighlights(activeSearchTerm, title);
+  const bodySnippetWithHighlight = createBodySnippetWithHighlight(
+    activeSearchTerm,
+    body
+  );
+
+  return (
+    <List.Item actions={[<a key="list-loadmore-edit">Details</a>]}>
+      <Skeleton avatar title={true} active loading={false}>
+        <List.Item.Meta
+          avatar={
+            <Avatar
+              src={
+                author?.avatarUrl ??
+                `https://xsgames.co/randomusers/avatar.php?g=pixel&key=${id}`
+              }
+            />
+          }
+          title={titleWithHighlight ?? title}
+          description={
+            bodySnippetWithHighlight ? (
+              <p
+                style={{ marginBottom: 0 }}
+                dangerouslySetInnerHTML={{
+                  __html: bodySnippetWithHighlight,
+                }}
+              />
+            ) : null
+          }
+        />
+        <small>{closed ? "CLOSED" : "OPEN"}</small>
+      </Skeleton>
+    </List.Item>
+  );
+};
+
+const createQueryString = (searchQuery: string, issueStatus: IssueStatus) => {
+  const statusFilterString = issueStatus === "all" ? "" : `is:${issueStatus}, `;
+  return `repo:facebook/react in:[title or body] ${searchQuery}, type:issue, ${statusFilterString}first: 100`;
+};
+
+const INITIAL_QUERY = "require";
+
+export const IssueViewer = () => {
+  const [viewDataState, setViewDataState] = useViewDataState();
+  const [searchInputValue, setSearchInputValue] = useState(INITIAL_QUERY);
+  const [activeSearchTerm, setActiveSearchTerm] = useState(INITIAL_QUERY);
+  const [statusFilter, setStatusFilter] = useState<IssueStatus>("all");
+
+  const { data, loading, error, refetch } = useQuery(searchQueryDocument, {
+    variables: { query: createQueryString(INITIAL_QUERY, statusFilter) },
+  });
+
+  useEffect(() => {
+    if (error) {
+      setViewDataState(ViewDataState.Error);
+      return;
+    }
+    if (loading || !data) {
+      setViewDataState(ViewDataState.Loading);
+      return;
+    }
+    if (data) {
+      if (!data.search.nodes?.length) {
+        setViewDataState(ViewDataState.NoResults);
+        return;
+      }
+      setViewDataState(ViewDataState.Data);
+      return;
+    }
+  }, [data, error, loading, setViewDataState]);
+
+  const onSearch = useCallback(
+    (searchTerm: string) => {
+      setViewDataState(ViewDataState.Loading);
+      setActiveSearchTerm(searchTerm);
+      refetch({ query: createQueryString(searchTerm, statusFilter) });
+    },
+    [refetch, setViewDataState, statusFilter]
+  );
+
+  const handleSearchQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.currentTarget.value;
+    setSearchInputValue(newValue);
+  };
+
+  const handleIssueStatusFilterChange = (newIssueStatus: IssueStatus) => {
+    setViewDataState(ViewDataState.Loading);
+    setStatusFilter(newIssueStatus);
+    refetch({ query: createQueryString(activeSearchTerm, newIssueStatus) });
+  };
 
   return (
     <div>
-      <h1>Issue Viewer</h1>
+      <h1 style={{ textAlign: "center", marginBottom: 30 }}>Issue Viewer</h1>
 
-      <ul>
-        {issues.map((issue) =>
-          issue?.node ? (
-            <IssuePreview key={issue.node.id} {...issue.node} />
-          ) : null
-        )}
-      </ul>
+      <Search
+        value={searchInputValue}
+        onChange={handleSearchQueryChange}
+        placeholder="search for term (ex: hooks)"
+        onSearch={onSearch}
+        style={{
+          width: 300,
+          marginBottom: 50,
+          display: "block",
+          margin: "0 auto 50px",
+        }}
+      />
+      <StatusChooser changeHandler={handleIssueStatusFilterChange} />
+      <p>
+        {viewDataState === ViewDataState.Initial ? "Enter a Search Term" : null}
+        {viewDataState === ViewDataState.Loading ? (
+          <div style={{ marginTop: 30 }}>
+            <h3 style={{ marginBottom: 20 }}>Loading</h3>
+            <Skeleton />
+          </div>
+        ) : null}
+        {viewDataState === ViewDataState.Error
+          ? `Errors: ${error!.name} ${error!.message}`
+          : null}
+        {viewDataState === ViewDataState.NoResults
+          ? `No results for "${searchInputValue}"`
+          : null}
+      </p>
+      {viewDataState === ViewDataState.Data ? (
+        <List
+          style={{ width: "100%" }}
+          itemLayout="horizontal"
+          dataSource={(data!.search?.nodes! as Issue[]) ?? []}
+          renderItem={(item) => (
+            <RenderItem {...item} activeSearchTerm={activeSearchTerm} />
+          )}
+        />
+      ) : null}
     </div>
   );
 };

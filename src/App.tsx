@@ -44,13 +44,12 @@ function App() {
             style={{
               paddingTop: 40,
               maxWidth: 900,
-              width: "100",
+              width: "100%",
               margin: "auto",
             }}
           >
             <IssueViewer />
           </Layout.Content>
-          <Layout.Footer>Footer</Layout.Footer>
         </Layout>
       </Space>
     </div>
