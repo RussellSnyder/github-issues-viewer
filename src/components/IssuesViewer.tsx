@@ -16,6 +16,7 @@ const searchQueryDocument = graphql(/* GraphQL */ `
       nodes {
         ... on Issue {
           id
+          number
           title
           state
           updatedAt
@@ -82,6 +83,7 @@ const RenderItem = ({
   activeSearchTerm,
   id,
   closed,
+  number,
 }: IssuePreviewProps) => {
   const titleWithHighlight = createTitleWithHighlights(activeSearchTerm, title);
   const bodySnippetWithHighlight = createBodySnippetWithHighlight(
@@ -90,7 +92,7 @@ const RenderItem = ({
   );
 
   return (
-    <List.Item actions={[<a key="list-loadmore-edit">Details</a>]}>
+    <List.Item actions={[<a href={`/issue/${number}`}>Details</a>]}>
       <Skeleton avatar title={true} active loading={false}>
         <List.Item.Meta
           avatar={

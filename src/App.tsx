@@ -1,18 +1,15 @@
+import { green } from "@ant-design/colors";
+import { GithubOutlined } from "@ant-design/icons";
 import { Layout, Space, Typography } from "antd";
+
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+
 import "antd/dist/reset.css";
 import "./App.module.css";
 import "./index.css";
 
-import {} from "antd/es/layout/layout";
 import { IssueViewer } from "./components/IssuesViewer";
-import { green } from "@ant-design/colors";
-import {
-  GithubOutlined,
-  BarsOutlined,
-  SettingFilled,
-  SmileOutlined,
-  SyncOutlined,
-} from "@ant-design/icons";
+import { IssueDetailsScreen } from "./screens/IssueDetailsScreen";
 
 function App() {
   return (
@@ -48,7 +45,12 @@ function App() {
               margin: "auto",
             }}
           >
-            <IssueViewer />
+            <Router>
+              <Routes>
+                <Route path="/" element={<IssueViewer />} />
+                <Route path="/issue/:id" element={<IssueDetailsScreen />} />
+              </Routes>
+            </Router>
           </Layout.Content>
         </Layout>
       </Space>
