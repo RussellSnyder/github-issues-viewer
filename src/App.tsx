@@ -37,11 +37,17 @@ function App() {
               style={{ marginTop: 10, color: "white" }}
             >
               <GithubOutlined />
-              <span style={{ margin: "0 20px" }}>React Issue Viewer</span>
-              <BarsOutlined />
+              <span style={{ marginLeft: 20 }}>React Issue Viewer</span>
             </Typography.Title>
           </Layout.Header>
-          <Layout.Content>
+          <Layout.Content
+            style={{
+              paddingTop: 40,
+              maxWidth: 900,
+              width: "100",
+              margin: "auto",
+            }}
+          >
             <IssueViewer />
           </Layout.Content>
           <Layout.Footer>Footer</Layout.Footer>
