@@ -28,7 +28,6 @@ export const StatusChooser = ({ changeHandler }: Props) => (
       items,
     }}
     trigger={["click"]}
-    onOpenChange={(idk) => console.log(idk)}
   >
     <div onClick={(e) => e.preventDefault()}>
       <Space>
