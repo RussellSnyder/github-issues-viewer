@@ -31,7 +31,6 @@ const issueQueryDocument = graphql(/* GraphQL */ `
 export const IssueDetailsScreen = () => {
   const { id } = useParams();
 
-  console.log(Number(id));
   const { data, loading, error, refetch } = useQuery(issueQueryDocument, {
     variables: { number: Number(id) },
   });

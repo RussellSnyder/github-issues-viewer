@@ -1,36 +1,12 @@
-import { useQuery } from "@apollo/client";
 import { Avatar, Input, List, Skeleton } from "antd";
-import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { graphql } from "../gql/gql";
 import { Issue } from "../gql/graphql";
-import { useViewDataState } from "../hooks/useViewDataState";
+import { useIssueSearchData } from "../hooks/useIssueSearchData";
 import { ViewDataState } from "../types";
-import { IssueStatus, StatusChooser } from "./StatusChooser";
-
-const { Search } = Input;
-
-// https://github.com/orgs/community/discussions/24428#discussioncomment-3244094
-const searchQueryDocument = graphql(/* GraphQL */ `
-  query searchQuery($query: String!) {
-    search(query: $query, type: ISSUE, first: 100) {
-      nodes {
-        ... on Issue {
-          id
-          number
-          title
-          state
-          updatedAt
-          body
-          closed
-          author {
-            avatarUrl(size: 50)
-            login
-          }
-        }
-      }
-    }
-  }
-`);
+import { KeywordSearch } from "./KeywordSearch";
+import { Loading } from "./Loading";
+import { StatusChooser } from "./StatusChooser";
+import { NoDataView } from "./NoDataView";
 
 interface IssuePreviewProps extends Issue {
   activeSearchTerm: string;
@@ -121,104 +97,38 @@ const RenderItem = ({
   );
 };
 
-const createQueryString = (searchQuery: string, issueStatus: IssueStatus) => {
-  const statusFilterString = issueStatus === "all" ? "" : `is:${issueStatus}, `;
-  return `repo:facebook/react in:[title or body] ${searchQuery}, type:issue, ${statusFilterString}first: 100`;
-};
-
-const INITIAL_QUERY = "require";
-
 export const IssueViewer = () => {
-  const [viewDataState, setViewDataState] = useViewDataState();
-  const [searchInputValue, setSearchInputValue] = useState(INITIAL_QUERY);
-  const [activeSearchTerm, setActiveSearchTerm] = useState(INITIAL_QUERY);
-  const [statusFilter, setStatusFilter] = useState<IssueStatus>("all");
-
-  const { data, loading, error, refetch } = useQuery(searchQueryDocument, {
-    variables: { query: createQueryString(INITIAL_QUERY, statusFilter) },
-  });
-
-  useEffect(() => {
-    if (error) {
-      setViewDataState(ViewDataState.Error);
-      return;
-    }
-    if (loading || !data) {
-      setViewDataState(ViewDataState.Loading);
-      return;
-    }
-    if (data) {
-      if (!data.search.nodes?.length) {
-        setViewDataState(ViewDataState.NoResults);
-        return;
-      }
-      setViewDataState(ViewDataState.Data);
-      return;
-    }
-  }, [data, error, loading, setViewDataState]);
-
-  const onSearch = useCallback(
-    (searchTerm: string) => {
-      setViewDataState(ViewDataState.Loading);
-      setActiveSearchTerm(searchTerm);
-      refetch({ query: createQueryString(searchTerm, statusFilter) });
-    },
-    [refetch, setViewDataState, statusFilter]
-  );
-
-  const handleSearchQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.currentTarget.value;
-    setSearchInputValue(newValue);
-  };
-
-  const handleIssueStatusFilterChange = (newIssueStatus: IssueStatus) => {
-    setViewDataState(ViewDataState.Loading);
-    setStatusFilter(newIssueStatus);
-    refetch({ query: createQueryString(activeSearchTerm, newIssueStatus) });
-  };
+  const {
+    viewDataState,
+    error,
+    issues,
+    setIssueStatusFilter,
+    searchForIssueByKeyword,
+    activeSearchTerm,
+  } = useIssueSearchData();
 
   return (
     <div>
       <h1 style={{ textAlign: "center", marginBottom: 30 }}>Issue Viewer</h1>
 
-      <Search
-        value={searchInputValue}
-        onChange={handleSearchQueryChange}
-        placeholder="search for term (ex: hooks)"
-        onSearch={onSearch}
-        style={{
-          width: 300,
-          marginBottom: 50,
-          display: "block",
-          margin: "0 auto 50px",
-        }}
-      />
-      <StatusChooser changeHandler={handleIssueStatusFilterChange} />
-      <p>
-        {viewDataState === ViewDataState.Initial ? "Enter a Search Term" : null}
-        {viewDataState === ViewDataState.Loading ? (
-          <div style={{ marginTop: 30 }}>
-            <h3 style={{ marginBottom: 20 }}>Loading</h3>
-            <Skeleton />
-          </div>
-        ) : null}
-        {viewDataState === ViewDataState.Error
-          ? `Errors: ${error!.name} ${error!.message}`
-          : null}
-        {viewDataState === ViewDataState.NoResults
-          ? `No results for "${searchInputValue}"`
-          : null}
-      </p>
+      <KeywordSearch onSearch={searchForIssueByKeyword} />
+      <StatusChooser changeHandler={setIssueStatusFilter} />
       {viewDataState === ViewDataState.Data ? (
         <List
           style={{ width: "100%" }}
           itemLayout="horizontal"
-          dataSource={(data!.search?.nodes! as Issue[]) ?? []}
+          dataSource={issues}
           renderItem={(item) => (
             <RenderItem {...item} activeSearchTerm={activeSearchTerm} />
           )}
         />
-      ) : null}
+      ) : (
+        <NoDataView
+          viewDataState={viewDataState}
+          error={error}
+          activeSearchTerm={activeSearchTerm}
+        />
+      )}
     </div>
   );
 };

@@ -39,7 +39,7 @@ function App() {
           </Layout.Header>
           <Layout.Content
             style={{
-              paddingTop: 40,
+              padding: "40px 20px",
               maxWidth: 900,
               width: "100%",
               margin: "auto",
