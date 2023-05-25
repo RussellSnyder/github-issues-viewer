@@ -14,7 +14,7 @@ export const NoDataView = ({
   activeSearchTerm,
 }: Props) => {
   return (
-    <p style={{ padding: 20 }}>
+    <div style={{ padding: 20 }} data-cy="empty-state">
       {viewDataState === ViewDataState.Initial ? "Enter a Search Term" : null}
       {viewDataState === ViewDataState.Loading ? <Loading /> : null}
       {viewDataState === ViewDataState.Error
@@ -23,6 +23,6 @@ export const NoDataView = ({
       {viewDataState === ViewDataState.NoResults
         ? `No results for "${activeSearchTerm}"`
         : null}
-    </p>
+    </div>
   );
 };

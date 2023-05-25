@@ -14,6 +14,7 @@ export const KeywordSearch = ({ onSearch }: Props) => {
 
   return (
     <Search
+      id="keyword-search"
       value={searchInputValue}
       onChange={(event) => setSearchInputValue(event.currentTarget.value)}
       placeholder="search for term (ex: hooks)"

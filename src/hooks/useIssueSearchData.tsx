@@ -47,12 +47,30 @@ export const useIssueSearchData = () => {
   });
 
   const setIssueStatusFilter = useCallback(
-    (newIssueStatus: IssueStatus) => {
+    async (newIssueStatus: IssueStatus) => {
+      if (
+        (!statusFilter && newIssueStatus === "all") ||
+        statusFilter === newIssueStatus
+      )
+        return;
       setViewDataState(ViewDataState.Loading);
       setStatusFilter(newIssueStatus);
-      refetch({ query: createQueryString(activeSearchTerm, newIssueStatus) });
+      await refetch({
+        query: createQueryString(activeSearchTerm, newIssueStatus),
+      });
+      if (data?.search.nodes?.length) {
+        setViewDataState(ViewDataState.Data);
+      } else {
+        setViewDataState(ViewDataState.Loading);
+      }
     },
-    [activeSearchTerm, refetch, setViewDataState]
+    [
+      activeSearchTerm,
+      data?.search.nodes?.length,
+      refetch,
+      setViewDataState,
+      statusFilter,
+    ]
   );
 
   const searchForIssueByKeyword = useCallback(

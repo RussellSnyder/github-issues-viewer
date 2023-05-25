@@ -68,7 +68,10 @@ const RenderItem = ({
   );
 
   return (
-    <List.Item actions={[<Link to={`/issue/${number}`}>Details</Link>]}>
+    <List.Item
+      className="repo-issue-preview"
+      actions={[<Link to={`/issue/${number}`}>Details</Link>]}
+    >
       <Skeleton avatar title={true} active loading={false}>
         <List.Item.Meta
           avatar={<UserPreview {...author} showLogin={false} />}
@@ -110,6 +113,7 @@ export const IssueViewer = () => {
       <StatusChooser changeHandler={setIssueStatusFilter} />
       {viewDataState === ViewDataState.Data ? (
         <List
+          id="issue-list"
           style={{ width: "100%" }}
           itemLayout="horizontal"
           dataSource={issues}
