@@ -18,7 +18,7 @@ export const NoDataView = ({
       {viewDataState === ViewDataState.Initial ? "Enter a Search Term" : null}
       {viewDataState === ViewDataState.Loading ? <Loading /> : null}
       {viewDataState === ViewDataState.Error
-        ? `Errors: ${error!.name} ${error!.message}`
+        ? `Error: ${error!.name} ${error!.message}`
         : null}
       {viewDataState === ViewDataState.NoResults
         ? `No results for "${activeSearchTerm}"`

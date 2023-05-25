@@ -34,6 +34,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:e2e": "npx cypress open",
     "eject": "react-scripts eject",
     "generate": "graphql-codegen",
     "prestart": "yarn generate",
