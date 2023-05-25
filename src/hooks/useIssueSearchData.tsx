@@ -29,8 +29,9 @@ const searchQueryDocument = graphql(/* GraphQL */ `
   }
 `);
 
-const createQueryString = (searchQuery: string, issueStatus: IssueStatus) => {
-  const statusFilterString = issueStatus === "all" ? "" : `is:${issueStatus}, `;
+const createQueryString = (searchQuery: string, issueStatus?: IssueStatus) => {
+  const statusFilterString =
+    !issueStatus || issueStatus === "all" ? "" : `is:${issueStatus}, `;
   return `repo:facebook/react in:[title or body] ${searchQuery}, type:issue, ${statusFilterString}first: 100`;
 };
 
@@ -38,9 +39,8 @@ const INITIAL_QUERY = "require";
 
 export const useIssueSearchData = () => {
   const [viewDataState, setViewDataState] = useViewDataState();
-  const [searchInputValue, setSearchInputValue] = useState(INITIAL_QUERY);
   const [activeSearchTerm, setActiveSearchTerm] = useState(INITIAL_QUERY);
-  const [statusFilter, setStatusFilter] = useState<IssueStatus>("all");
+  const [statusFilter, setStatusFilter] = useState<IssueStatus>();
 
   const { data, loading, error, refetch } = useQuery(searchQueryDocument, {
     variables: { query: createQueryString(INITIAL_QUERY, statusFilter) },
@@ -87,9 +87,10 @@ export const useIssueSearchData = () => {
     viewDataState,
     error,
     refetch,
-    issues: data!.search?.nodes! as Issue[],
+    issues: (data?.search?.nodes as Issue[]) ?? [],
     setIssueStatusFilter,
     searchForIssueByKeyword,
     activeSearchTerm,
+    statusFilter,
   };
 };

@@ -4,7 +4,7 @@ import { Loading } from "./Loading";
 
 interface Props {
   viewDataState: ViewDataState;
-  activeSearchTerm: string;
+  activeSearchTerm?: string;
   error?: ApolloError;
 }
 

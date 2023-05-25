@@ -29,13 +29,15 @@ function App() {
               textAlign: "center",
             }}
           >
-            <Typography.Title
-              level={2}
-              style={{ marginTop: 10, color: "white" }}
-            >
-              <GithubOutlined />
-              <span style={{ marginLeft: 20 }}>React Issue Viewer</span>
-            </Typography.Title>
+            <a href="/">
+              <Typography.Title
+                level={2}
+                style={{ marginTop: 10, color: "white" }}
+              >
+                <GithubOutlined />
+                <span style={{ marginLeft: 20 }}>React Issue Viewer</span>
+              </Typography.Title>
+            </a>
           </Layout.Header>
           <Layout.Content
             style={{

@@ -1,12 +1,12 @@
-import { Avatar, Input, List, Skeleton } from "antd";
-import { graphql } from "../gql/gql";
+import { Layout, List, Skeleton, Typography } from "antd";
+import { Link } from "react-router-dom";
 import { Issue } from "../gql/graphql";
 import { useIssueSearchData } from "../hooks/useIssueSearchData";
 import { ViewDataState } from "../types";
 import { KeywordSearch } from "./KeywordSearch";
-import { Loading } from "./Loading";
-import { StatusChooser } from "./StatusChooser";
 import { NoDataView } from "./NoDataView";
+import { StatusChooser } from "./StatusChooser";
+import { UserPreview } from "./UserPreview";
 
 interface IssuePreviewProps extends Issue {
   activeSearchTerm: string;
@@ -68,17 +68,10 @@ const RenderItem = ({
   );
 
   return (
-    <List.Item actions={[<a href={`/issue/${number}`}>Details</a>]}>
+    <List.Item actions={[<Link to={`/issue/${number}`}>Details</Link>]}>
       <Skeleton avatar title={true} active loading={false}>
         <List.Item.Meta
-          avatar={
-            <Avatar
-              src={
-                author?.avatarUrl ??
-                `https://xsgames.co/randomusers/avatar.php?g=pixel&key=${id}`
-              }
-            />
-          }
+          avatar={<UserPreview {...author} showLogin={false} />}
           title={titleWithHighlight ?? title}
           description={
             bodySnippetWithHighlight ? (
@@ -108,8 +101,10 @@ export const IssueViewer = () => {
   } = useIssueSearchData();
 
   return (
-    <div>
-      <h1 style={{ textAlign: "center", marginBottom: 30 }}>Issue Viewer</h1>
+    <Layout>
+      <Typography.Title style={{ textAlign: "center", marginBottom: 30 }}>
+        Issue Viewer
+      </Typography.Title>
 
       <KeywordSearch onSearch={searchForIssueByKeyword} />
       <StatusChooser changeHandler={setIssueStatusFilter} />
@@ -129,6 +124,6 @@ export const IssueViewer = () => {
           activeSearchTerm={activeSearchTerm}
         />
       )}
-    </div>
+    </Layout>
   );
 };

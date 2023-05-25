@@ -20,7 +20,7 @@ export const KeywordSearch = ({ onSearch }: Props) => {
       onSearch={onSearch}
       style={{
         width: 300,
-        marginBottom: 50,
+        marginBottom: 30,
         display: "block",
         margin: "0 auto 50px",
       }}
