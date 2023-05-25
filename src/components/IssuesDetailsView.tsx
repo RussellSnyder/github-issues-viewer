@@ -1,4 +1,4 @@
-import { Button, Layout, List, Space, Typography } from "antd";
+import { Layout, List, Space, Typography } from "antd";
 import { IssueComment, IssueCommentEdge } from "../gql/graphql";
 import { useIssueData } from "../hooks/useIssueData";
 import { ViewDataState } from "../types";

@@ -1,10 +1,9 @@
 import { useQuery } from "@apollo/client";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { IssueStatus } from "../components/StatusChooser";
-import { ViewDataState } from "../types";
-import { useViewDataState } from "./useViewDataState";
+import { useEffect } from "react";
 import { graphql } from "../gql/gql";
 import { Issue } from "../gql/graphql";
+import { ViewDataState } from "../types";
+import { useViewDataState } from "./useViewDataState";
 
 const issueQueryDocument = graphql(/* GraphQL */ `
   query issueQuery($number: Int!, $after: String) {
